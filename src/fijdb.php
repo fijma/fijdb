@@ -23,14 +23,14 @@ class Fijdb
 
 	/**
 	 * Ensures the user array conforms to the expected format of
-	 * ['ro' => ['id' => 'readonly', 'pw' => 'readonlypw'],
-	 *  'rw' => ['id' => 'readwrite', 'pw' => 'readwritepw']];
+	 * ['user1' => ['id' => 'user1id', 'pw' => 'user1pw'],
+	 *  'user2' => ['id' => 'user2id', 'pw' => 'user2pw']];
 	 */
 	public function validateUsers(array $users)
 	{
-		if(count($users) !== 2) return false;
-		foreach(['ro', 'rw'] as $k) {
-			if(!array_key_exists($k, $users)) return false;
+		if(count($users) === 0) return false;
+		foreach($users as $k => $v) {
+			if(!is_string($k)) return false;
 			if(!is_array($users[$k])) return false;
 			if(count($users[$k]) !== 2) return false;
 			foreach(['id', 'pw'] as $l) {
