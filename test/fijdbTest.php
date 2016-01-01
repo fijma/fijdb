@@ -24,6 +24,37 @@ class FijdbTest extends PHPUnit_Framework_TestCase
 		$users = array();
 		$db = new Fijdb('host', 'dbname', $users);
 	}
+
+	/**
+	 * @expectedException \Exception
+	 * @expectedExceptionMessage Fijdb received invalid host value.
+	 */
+	public function test_fijdb_rejects_invalid_host()
+	{
+		$users = ['ro' => ['id' => 'readonly',
+				   'pw' => 'readonlypw'],
+			  'rw' => ['id' => 'readwrite',
+			  	   'pw' => 'readwritepw']
+			 ];
+	
+		$db = new Fijdb(null, 'dbname', $users);
+	}
+
+	/**
+	 * @expectedException \Exception
+	 * @expectedExceptionMessage Fijdb received invalid dbname value.
+	 */
+	public function test_fijdb_rejects_invalid_dbname()
+	{
+		$users = ['ro' => ['id' => 'readonly',
+				   'pw' => 'readonlypw'],
+			  'rw' => ['id' => 'readwrite',
+			  	   'pw' => 'readwritepw']
+			 ];
+	
+		$db = new Fijdb('host', null, $users);
+	}
+
 }
 
 ?>
