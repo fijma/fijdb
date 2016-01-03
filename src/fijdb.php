@@ -24,9 +24,9 @@ class Fijdb
 	/**
 	 * Ensures the user array conforms to the expected format of
 	 * ['user1' => ['id' => 'user1id', 'pw' => 'user1pw'],
-	 *  'user2' => ['id' => 'user2id', 'pw' => 'user2pw']];
+	 *  'user2' => ['id' => 'user2id', 'pw' => 'user2pw'],...];
 	 */
-	public function validateUsers(array $users)
+	protected function validateUsers(array $users)
 	{
 		if(count($users) === 0) return false;
 		foreach($users as $k => $v) {
