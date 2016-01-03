@@ -5,10 +5,10 @@ namespace fijma\fijdb;
 class Fijdb
 {
 
-	var $host;
-	var $dbname;
-	var $users;
-	var $conn;
+	protected $host;
+	protected $dbname;
+	protected $users;
+	protected $conn = array();
 
 	public function __construct($host, $dbname, array $users)
 	{
@@ -18,6 +18,50 @@ class Fijdb
 		$this->dbname = $dbname;
 		if(!$this->validateUsers($users)) throw new \Exception('Fijdb received invalid users array.');
 		$this->users = $users;
+	}
+
+	public function __destruct()
+	{
+		$this->close();
+	}
+
+	/**
+	 * Return the database connection for the given user, creating it if required.
+	 */
+	protected function &connect($user)
+	{
+		if(!array_key_exists($user, $this->conn)) {
+			if(array_key_exists($user, $this->users)) {
+				$this->conn[$user] = new \mysqli($this->host, $this->users[$user]['id'], $this->users[$user]['pw'], $this->dbname);
+			} else {
+				throw new \Exception('Fijdb does not know who ' . $user . ' is.');
+			}
+			if($this->conn[$user]->connect_error) {
+				throw new \Exception('Fijdb failed to connect to the database: ' . $this->conn[$user]->connect_error);
+			}
+		}
+		return $this->conn[$user];
+	}
+
+	/**
+	 * Close the database connection for the given user.
+	 * If not user is given, close all connections.
+	 */
+	protected function close($user = null)
+	{
+		if(is_null($user)) {
+			foreach($this->conn as $db) {
+				$db->close();
+			}
+			$this->conn = [];
+		} else {
+			if(array_key_exists($user, $this->conn)) {
+				if (is_resource($this->conn[$user])) {
+					$this->conn[$user]->close();
+				}
+				unset($this->conn[$user]);
+			}
+		}
 	}
 
 

@@ -2,17 +2,30 @@
 
 use \fijma\fijdb\Fijdb;
 
-class FijdbTest extends PHPUnit_Framework_TestCase
+class FijdbTest extends FijmaPHPUnitExtensions 
 {
-	public function test_fijdb_validates_user_array()
-	{
-		$users = ['ro' => ['id' => 'readonly',
-				   'pw' => 'readonlypw'],
-			  'rw' => ['id' => 'readwrite',
-			  	   'pw' => 'readwritepw']
-			 ];
 
-		$this->assertInstanceOf('fijma\fijdb\Fijdb', new Fijdb('host', 'dbname', $users));
+	protected $users = ['u1' => ['id' => 'u1',
+			             'pw' => 'u1pw'],
+		            'u2' => ['id' => 'u2',
+			             'pw' => 'u2pw']
+			   ];
+
+	public function getConnection()
+	{
+		$pdo = new PDO('mysql:host=localhost;dbname=fijdb', 'u2', 'u2pw');
+		return $this->createDefaultDBConnection($pdo, 'fijdb');
+	}
+
+	public function getDataSet()
+	{
+		return new PHPUnit_Extensions_Database_DataSet_DefaultDataSet();
+	}
+		
+		
+	public function test_fijdb_accepts_valid_user_array()
+	{
+		$this->assertInstanceOf('fijma\fijdb\Fijdb', new Fijdb('host', 'dbname', $this->users));
 	}
 
 	/**
@@ -91,13 +104,7 @@ class FijdbTest extends PHPUnit_Framework_TestCase
 	 */
 	public function test_fijdb_rejects_invalid_host()
 	{
-		$users = ['ro' => ['id' => 'readonly',
-				   'pw' => 'readonlypw'],
-			  'rw' => ['id' => 'readwrite',
-			  	   'pw' => 'readwritepw']
-			 ];
-	
-		$db = new Fijdb(null, 'dbname', $users);
+		$db = new Fijdb(null, 'dbname', $this->users);
 	}
 
 	/**
@@ -106,13 +113,15 @@ class FijdbTest extends PHPUnit_Framework_TestCase
 	 */
 	public function test_fijdb_rejects_invalid_dbname()
 	{
-		$users = ['ro' => ['id' => 'readonly',
-				   'pw' => 'readonlypw'],
-			  'rw' => ['id' => 'readwrite',
-			  	   'pw' => 'readwritepw']
-			 ];
-	
-		$db = new Fijdb('host', null, $users);
+		$db = new Fijdb('host', null, $this->users);
+	}
+
+	public function test_get_connection_gets_a_connection()
+	{
+		$db = new Fijdb('localhost', 'fijdb', $this->users);
+		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'connect');
+		$conn = $m->invokeArgs($db, array('u1'));
+		$this->assertInstanceOf('\mysqli', $conn);
 	}
 
 }
