@@ -124,6 +124,58 @@ class FijdbTest extends FijmaPHPUnitExtensions
 		$this->assertInstanceOf('\mysqli', $conn);
 	}
 
+	/**
+	 * @expectedException \Exception
+	 * @expectedExceptionMessage Fijdb does not know who fij is.
+	 */
+	public function test_fijdb_rejects_unknown_users()
+	{
+		$db = new Fijdb('localhost', 'fijdb', $this->users);
+		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'connect');
+		$conn = $m->invokeArgs($db, array('fij'));
+	}
+
+	public function test_fijdb_saves_connections_to_array()
+	{
+		$db = new Fijdb('localhost', 'fijdb', $this->users);
+		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'connect');
+		$conn1 = $m->invokeArgs($db, array('u1'));
+		$conn2 = $m->invokeArgs($db, array('u2'));
+		$p = $this->getProperty('\fijma\fijdb\Fijdb', 'conn');
+		$connArray = $p->getValue($db);
+		$this->assertArrayHasKey('u1', $connArray);
+		$this->assertIdentical($connArray['u1'], $conn1);
+		$this->assertArrayHasKey('u2', $connArray);
+		$this->assertIdentical($connArray['u2'], $conn2);
+	}
+
+	public function test_fijdb_closes_all_connections_when_calling_close_without_args()
+	{
+		$db = new Fijdb('localhost', 'fijdb', $this->users);
+		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'connect');
+		$m->invokeArgs($db, array('u1'));
+		$m->invokeArgs($db, array('u2'));
+		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'close');
+	        $m->invoke($db);
+		$p = $this->getProperty('\fijma\fijdb\Fijdb', 'conn');
+		$conArray = $p->getValue($db);
+		$this->assertEmpty($conArray);
+	}
+
+	public function test_fijdb_only_closes_the_requested_connection()
+	{
+		$db = new Fijdb('localhost', 'fijdb', $this->users);
+		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'connect');
+		$m->invokeArgs($db, array('u1'));
+		$m->invokeArgs($db, array('u2'));
+		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'close');
+	        $m->invokeArgs($db, array('u1'));
+		$p = $this->getProperty('\fijma\fijdb\Fijdb', 'conn');
+		$conArray = $p->getValue($db);
+		$this->assertCount(1, $conArray);
+		$this->assertArrayHasKey('u2', $conArray);
+	}
+
 }
 
 ?>

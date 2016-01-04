@@ -56,9 +56,7 @@ class Fijdb
 			$this->conn = [];
 		} else {
 			if(array_key_exists($user, $this->conn)) {
-				if (is_resource($this->conn[$user])) {
-					$this->conn[$user]->close();
-				}
+				$this->conn[$user]->close();
 				unset($this->conn[$user]);
 			}
 		}
@@ -84,8 +82,5 @@ class Fijdb
 		}
 		return true;
 	}
-
-
 }
-
 ?>

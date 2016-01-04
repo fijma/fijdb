@@ -27,4 +27,15 @@ abstract class FijmaPHPUnitExtensions extends PHPUnit_Extensions_Database_TestCa
 		$method->setAccessible(true);
 		return $method;
 	}
+
+	/**
+	 * Make the protected/private property accessible.
+	 */
+	public static function getProperty($className, $propertyName)
+	{
+		$class = new \ReflectionClass($className);
+		$property = $class->getProperty($propertyName);
+		$property->setAccessible(true);
+		return $property;
+	}
 }
