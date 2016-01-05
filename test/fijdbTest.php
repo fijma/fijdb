@@ -19,7 +19,7 @@ class FijdbTest extends FijmaPHPUnitExtensions
 
 	public function getDataSet()
 	{
-		return new PHPUnit_Extensions_Database_DataSet_DefaultDataSet();
+		return $this->createFlatXMLDataSet('test/setup.xml');
 	}
 		
 		
@@ -175,6 +175,51 @@ class FijdbTest extends FijmaPHPUnitExtensions
 		$this->assertCount(1, $conArray);
 		$this->assertArrayHasKey('u2', $conArray);
 	}
+
+	public function test_fijdb_select_without_parameters()
+	{
+		$db = new Fijdb('localhost', 'fijdb', $this->users);
+		$select = $this->getMethod('\fijma\fijdb\Fijdb', 'select');
+		$results = $select->invoke($db, 'u2', 'SELECT * FROM testtable');
+		$this->assertTrue(is_array($results));
+		$this->assertCount(1, $results);
+		$this->assertTrue(is_array($results[0]));
+		$this->assertCount(2, $results[0]);
+		$this->assertArrayHasKey('id', $results[0]);
+		$this->assertArrayHasKey('value', $results[0]);
+		$this->assertEquals([['id' => 1,
+				   'value' => 'Because I have to have something.']], $results);
+	}
+
+	public function test_fijdb_select_with_parameters()
+	{
+		$db = new Fijdb('localhost', 'fijdb', $this->users);
+		$select = $this->getMethod('\fijma\fijdb\Fijdb', 'select');
+		$results = $select->invoke($db, 'u2', 'SELECT * FROM testtable WHERE id = ?', 'i', array(1));
+		$this->assertTrue(is_array($results));
+		$this->assertCount(1, $results);
+		$this->assertTrue(is_array($results[0]));
+		$this->assertCount(2, $results[0]);
+		$this->assertArrayHasKey('id', $results[0]);
+		$this->assertArrayHasKey('value', $results[0]);
+		$this->assertEquals([['id' => 1,
+				   'value' => 'Because I have to have something.']], $results);
+	}
+
+	public function test_fijdb_insert()
+	{
+		$db = new Fijdb('localhost', 'fijdb', $this->users);
+		$insert = $this->getMethod('\fijma\fijdb\Fijdb', 'insert');
+		$id = $insert->invoke($db, 'u2', 'INSERT INTO testtable(value) VALUES(?);', 's', array('Hello, world!'));
+		$this->assertEquals(2, $id);
+		$queryTable = $this->getConnection()->createQueryTable(
+			'testtable', 'SELECT * FROM testtable'
+		);
+		$expectedTable = $this->createFlatXMLDataSet('test/test_fijdb_insert.xml')
+				      ->getTable('testtable');
+		$this->assertTablesEqual($expectedTable, $queryTable);
+	}
+
 
 }
 
