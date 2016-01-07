@@ -9,7 +9,15 @@ class FijdbTest extends FijmaPHPUnitExtensions
 			             'pw' => 'u1pw'],
 		            'u2' => ['id' => 'u2',
 			             'pw' => 'u2pw']
-			   ];
+			     ];
+
+	protected $db;
+
+	protected function setUp()
+	{
+		parent::setUp();
+		$this->db = new Fijdb('localhost', 'fijdb', $this->users);
+	}	
 
 	public function getConnection()
 	{
@@ -118,9 +126,8 @@ class FijdbTest extends FijmaPHPUnitExtensions
 
 	public function test_get_connection_gets_a_connection()
 	{
-		$db = new Fijdb('localhost', 'fijdb', $this->users);
 		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'connect');
-		$conn = $m->invokeArgs($db, array('u1'));
+		$conn = $m->invokeArgs($this->db, array('u1'));
 		$this->assertInstanceOf('\mysqli', $conn);
 	}
 
@@ -130,19 +137,17 @@ class FijdbTest extends FijmaPHPUnitExtensions
 	 */
 	public function test_fijdb_rejects_unknown_users()
 	{
-		$db = new Fijdb('localhost', 'fijdb', $this->users);
 		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'connect');
-		$conn = $m->invokeArgs($db, array('fij'));
+		$conn = $m->invokeArgs($this->db, array('fij'));
 	}
 
 	public function test_fijdb_saves_connections_to_array()
 	{
-		$db = new Fijdb('localhost', 'fijdb', $this->users);
 		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'connect');
-		$conn1 = $m->invokeArgs($db, array('u1'));
-		$conn2 = $m->invokeArgs($db, array('u2'));
+		$conn1 = $m->invokeArgs($this->db, array('u1'));
+		$conn2 = $m->invokeArgs($this->db, array('u2'));
 		$p = $this->getProperty('\fijma\fijdb\Fijdb', 'conn');
-		$connArray = $p->getValue($db);
+		$connArray = $p->getValue($this->db);
 		$this->assertArrayHasKey('u1', $connArray);
 		$this->assertIdentical($connArray['u1'], $conn1);
 		$this->assertArrayHasKey('u2', $connArray);
@@ -151,36 +156,33 @@ class FijdbTest extends FijmaPHPUnitExtensions
 
 	public function test_fijdb_closes_all_connections_when_calling_close_without_args()
 	{
-		$db = new Fijdb('localhost', 'fijdb', $this->users);
 		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'connect');
-		$m->invokeArgs($db, array('u1'));
-		$m->invokeArgs($db, array('u2'));
+		$m->invokeArgs($this->db, array('u1'));
+		$m->invokeArgs($this->db, array('u2'));
 		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'close');
-	        $m->invoke($db);
+	        $m->invoke($this->db);
 		$p = $this->getProperty('\fijma\fijdb\Fijdb', 'conn');
-		$conArray = $p->getValue($db);
+		$conArray = $p->getValue($this->db);
 		$this->assertEmpty($conArray);
 	}
 
 	public function test_fijdb_only_closes_the_requested_connection()
 	{
-		$db = new Fijdb('localhost', 'fijdb', $this->users);
 		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'connect');
-		$m->invokeArgs($db, array('u1'));
-		$m->invokeArgs($db, array('u2'));
+		$m->invokeArgs($this->db, array('u1'));
+		$m->invokeArgs($this->db, array('u2'));
 		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'close');
-	        $m->invokeArgs($db, array('u1'));
+	        $m->invokeArgs($this->db, array('u1'));
 		$p = $this->getProperty('\fijma\fijdb\Fijdb', 'conn');
-		$conArray = $p->getValue($db);
+		$conArray = $p->getValue($this->db);
 		$this->assertCount(1, $conArray);
 		$this->assertArrayHasKey('u2', $conArray);
 	}
 
 	public function test_fijdb_select_without_parameters()
 	{
-		$db = new Fijdb('localhost', 'fijdb', $this->users);
 		$select = $this->getMethod('\fijma\fijdb\Fijdb', 'select');
-		$results = $select->invoke($db, 'u2', 'SELECT * FROM testtable');
+		$results = $select->invoke($this->db, 'u2', 'SELECT * FROM testtable');
 		$this->assertTrue(is_array($results));
 		$this->assertCount(1, $results);
 		$this->assertTrue(is_array($results[0]));
@@ -193,9 +195,8 @@ class FijdbTest extends FijmaPHPUnitExtensions
 
 	public function test_fijdb_select_with_parameters()
 	{
-		$db = new Fijdb('localhost', 'fijdb', $this->users);
 		$select = $this->getMethod('\fijma\fijdb\Fijdb', 'select');
-		$results = $select->invoke($db, 'u2', 'SELECT * FROM testtable WHERE id = ?', 'i', array(1));
+		$results = $select->invoke($this->db, 'u2', 'SELECT * FROM testtable WHERE id = ?', 'i', array(1));
 		$this->assertTrue(is_array($results));
 		$this->assertCount(1, $results);
 		$this->assertTrue(is_array($results[0]));
@@ -208,9 +209,8 @@ class FijdbTest extends FijmaPHPUnitExtensions
 
 	public function test_fijdb_insert()
 	{
-		$db = new Fijdb('localhost', 'fijdb', $this->users);
 		$insert = $this->getMethod('\fijma\fijdb\Fijdb', 'insert');
-		$id = $insert->invoke($db, 'u2', 'INSERT INTO testtable(value) VALUES(?);', 's', array('Hello, world!'));
+		$id = $insert->invoke($this->db, 'u2', 'INSERT INTO testtable(value) VALUES(?);', 's', array('Hello, world!'));
 		$this->assertEquals(2, $id);
 		$queryTable = $this->getConnection()->createQueryTable(
 			'testtable', 'SELECT * FROM testtable'
@@ -220,6 +220,58 @@ class FijdbTest extends FijmaPHPUnitExtensions
 		$this->assertTablesEqual($expectedTable, $queryTable);
 	}
 
+	public function test_fijdb_multi_insert()
+	{
+		$multiInsert = $this->getMethod('\fijma\fijdb\Fijdb', 'insertMultiple');
+		$data = [["Here's an entry."], ["Here's another."]];
+		$multiInsert->invoke($this->db, 'u2', 'INSERT INTO testtable(value) VALUES(?);', 's', $data);
+		$queryTable = $this->getConnection()->createQueryTable(
+			'testtable', 'SELECT * FROM testtable;'
+		);
+		$expectedTable = $this->createFlatXMLDataSet('test/test_fijdb_multi_insert.xml')
+				      ->getTable('testtable');
+		$this->assertTablesEqual($expectedTable, $queryTable);
+	}
+
+	public function test_fijdb_update()
+	{
+		$insert = $this->getMethod('\fijma\fijdb\Fijdb', 'insert');
+		$update = $this->getMethod('\fijma\fijdb\Fijdb', 'update');
+		$insert->invoke($this->db, 'u2', 'INSERT INTO testtable(value) VALUES(?);', 's', array('Hello, world!'));
+		$queryTable = $this->getConnection()->createQueryTable(
+			'testtable', 'SELECT * FROM testtable;'
+		);
+		$expectedTable = $this->createFlatXMLDataSet('test/test_fijdb_insert.xml')
+				      ->getTable('testtable');
+		$this->assertTablesEqual($expectedTable, $queryTable);
+		$update->invoke($this->db, 'u2', 'UPDATE testtable SET value = ? WHERE id = ?;', 'si', ['Hello yourself!', 2]);
+		$queryTable = $this->getConnection()->createQueryTable(
+			'testtable', 'SELECT * FROM testtable;'
+		);
+		$expectedTable = $this->createFlatXMLDataSet('test/test_fijdb_update.xml')
+				      ->getTable('testtable');
+		$this->assertTablesEqual($expectedTable, $queryTable);
+	}
+
+	public function test_fijdb_delete()
+	{
+		$insert = $this->getMethod('\fijma\fijdb\Fijdb', 'insert');
+		$delete = $this->getMethod('\fijma\fijdb\Fijdb', 'delete');
+		$insert->invoke($this->db, 'u2', 'INSERT INTO testtable(value) VALUES(?);', 's', array('Hello, world!'));
+		$queryTable = $this->getConnection()->createQueryTable(
+			'testtable', 'SELECT * FROM testtable;'
+		);
+		$expectedTable = $this->createFlatXMLDataSet('test/test_fijdb_insert.xml')
+				      ->getTable('testtable');
+		$this->assertTablesEqual($expectedTable, $queryTable);
+		$delete->invoke($this->db, 'u2', 'DELETE FROM testtable WHERE id = ?;', 'i', [1]);
+		$queryTable = $this->getConnection()->createQueryTable(
+			'testtable', 'SELECT * FROM testtable;'
+		);
+		$expectedTable = $this->createFlatXMLDataSet('test/test_fijdb_delete.xml')
+				      ->getTable('testtable');
+		$this->assertTablesEqual($expectedTable, $queryTable);
+	}
 
 }
 

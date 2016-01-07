@@ -125,13 +125,13 @@ class Fijdb
 	 */
 
 	// Returns the insert id for the row.
-	protected function insert($user, $sql, $typestring = '', $args = [])
+	protected function insert($user, $sql, $typestring, $args)
 	{
 		return $this->runQuery(self::INSERT, $user, $sql, $typestring, $args);
 	}
 
 	// Expects an array of parameter arrays. 
-	protected function insertMultiple($user, $sql, $typestring = '', $args = [])
+	protected function insertMultiple($user, $sql, $typestring, $args)
 	{
 		$this->runQuery(self::MULTI_INSERT, $user, $sql, $typestring, $args);
 	}
@@ -141,12 +141,12 @@ class Fijdb
 		return $this->runQuery(self::SELECT, $user, $sql, $typestring, $args);
 	}
 
-	protected function update($user, $sql, $typestring = '', $args = [])
+	protected function update($user, $sql, $typestring, $args)
 	{
 		$this->runQuery(self::UPDATE, $user, $sql, $typestring, $args);
 	}
 
-	protected function delete($user, $sql, $typestring = '', $args = [])
+	protected function delete($user, $sql, $typestring, $args)
 	{
 		$this->runQuery(self::DELETE, $user, $sql, $typestring, $args);
 	}
