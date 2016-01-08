@@ -38,4 +38,15 @@ abstract class FijmaPHPUnitExtensions extends PHPUnit_Extensions_Database_TestCa
 		$property->setAccessible(true);
 		return $property;
 	}
+
+	/**
+	 * A function to bypass PHPUnit's default error handling.
+	 * Usage: set_error_handler([$this, 'bypassError']);
+	 */
+	public function bypassError($errno, $errstr, $errfile, $errline, $errcontext)
+	{
+		// do nothing, we're just avoiding PHPUnit's error handling behaviour.
+	}
+
+
 }

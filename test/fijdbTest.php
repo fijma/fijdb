@@ -124,7 +124,21 @@ class FijdbTest extends FijmaPHPUnitExtensions
 		$db = new Fijdb('host', null, $this->users);
 	}
 
-	public function test_get_connection_gets_a_connection()
+	/**
+	 * @expectedException \Exception
+	 * @expectedException Message Fijdb failed to connect to the database:
+	 */
+	public function test_fijdb_reports_failed_connection()
+	{
+		$users = ['fij' => ['id' => 'fij', 'pw' => 'fijpw']];
+		$db = new Fijdb('localhost', 'fijdb', $users);
+		set_error_handler([$this, 'bypassError']);
+		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'connect');
+		$conn = $m->invokeArgs($db, array('fij'));
+		restore_error_handler();
+	}
+
+	public function test_fijdb_connect_gets_a_connection()
 	{
 		$m = $this->getMethod('\fijma\fijdb\Fijdb', 'connect');
 		$conn = $m->invokeArgs($this->db, array('u1'));
