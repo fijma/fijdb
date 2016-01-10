@@ -229,7 +229,7 @@ class Fijdb
 				$this->close($user);
 				throw new \Exception('Fijdb could not get insert id: ' . $err);
 			}
-		}
+		} // @codeCoverageIgnore
 		if(!$this->inTransaction) $this->close($user);
 		return $id;
 	}

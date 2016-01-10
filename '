@@ -308,120 +308,17 @@ class FijdbTest extends FijmaPHPUnitExtensions
 		set_error_handler([$this, 'bypassError']);
 		$begin = $this->getMethod('\fijma\fijdb\Fijdb', 'beginTransaction');
 		$begin->invoke($this->db, 'u1');
-		$p = $this->getProperty('\fijma\fijdb\Fijdb', 'inTransaction');
-		$inTransaction = $p->getValue($this->db);
+		$inTransactionProperty = $this->getProperty('\fijma\fijdb\Fijdb', 'inTransaction');
+		$inTransaction = $inTransactionProperty->getValue($this->db);
 		$this->assertEquals($inTransaction, true);
 		$select = $this->getMethod('\fijma\fijdb\Fijdb', 'select');
 		$select->invoke($this->db, 'u1', 'SELECT * FROM notatable;');
 		restore_error_handler();
-		$inTransaction = $p->getValue($this->db);
+		$inTransaction = $inTransactionProperty->getValue($this->db);
 		$this->assertEquals($inTransaction, false);
 	}
 
-	/**
-	 * @expectedException \Exception
-	 * @expectedExceptionMessage Fijdb could not bind parameters: 
-	 */
-	public function test_fijdb_bind_statement_failure_non_transaction()
-	{
-		$stmt = new \fijma\fijdb\MockMysqliStatement();
-		$stmt->setReturn(false);
-		$bind = $this->getMethod('\fijma\fijdb\Fijdb', 'bindParameters');
-		$ref = &$stmt;
-		$bind->invoke($this->db, 'u2', $ref, 'i', [0]);
-	}
 
-	/**
-	 * @expectedException \Exception
-	 * @expectedExceptionMessage Fijdb could not bind parameters: 
-	 */
-	public function test_fijdb_bind_statement_failure_transaction()
-	{
-		$begin = $this->getMethod('\fijma\fijdb\Fijdb', 'beginTransaction');
-		$begin->invoke($this->db, 'u1');
-		$p = $this->getProperty('\fijma\fijdb\Fijdb', 'inTransaction');
-		$inTransaction = $p->getValue($this->db);
-		$this->assertEquals($inTransaction, true);
-		$stmt = new \fijma\fijdb\MockMysqliStatement();
-		$stmt->setReturn(false);
-		$bind = $this->getMethod('\fijma\fijdb\Fijdb', 'bindParameters');
-		$ref = &$stmt;
-		$bind->invoke($this->db, 'u1', $ref, 'i', [0]);
-		$inTransaction = $p->getValue($this->db);
-		$this->assertEquals($inTransaction, false);
-	}
-
-	/**
-	 * @expectedException \Exception
-	 * @expectedExceptionMessage Fijdb did not receive arguments array.
-	 */
-	public function test_fijdb_bindParameters_with_missing_arguments()
-	{
-		$stmt = new \fijma\fijdb\MockMysqliStatement();
-		$ref = &$stmt;
-		$bind = $this->getMethod('\fijma\fijdb\Fijdb', 'bindParameters');
-		$bind->invoke($this->db, 'u1', $ref, 'i', []);
-	}
-	
-	/**
-	 * @expectedException \Exception
-	 * @expectedExceptionMessage Fijdb did not receive a typestring.
-	 */
-	public function test_fijdb_bindParameters_with_missing_typestring()
-	{
-		$stmt = new \fijma\fijdb\MockMysqliStatement();
-		$ref = &$stmt;
-		$bind = $this->getMethod('\fijma\fijdb\Fijdb', 'bindParameters');
-		$bind->invoke($this->db, 'u1', $ref, '', [0]);
-	}
-	
-	/**
-	 * @expectedException \Exception
-	 * @expectedExceptionMessage Could not execute query: argh!
-	 */
-	public function test_fijdb_executeStatement_error_non_transaction()
-	{
-		$stmt = new \fijma\fijdb\MockMysqliStatement();
-		$stmt->setReturn(false);
-		$stmt->error = 'argh!';
-		$ref = &$stmt;
-		$exec = $this->getMethod('\fijma\fijdb\Fijdb', 'executeStatement');
-		$exec->invoke($this->db, $ref, 'u1');
-	}
-
-	/**
-	 * @expectedException \Exception
-	 * @expectedExceptionMessage Could not execute query: argh!
-	 */
-	public function test_fijdb_executeStatement_error_transaction()
-	{
-		$begin = $this->getMethod('\fijma\fijdb\Fijdb', 'beginTransaction');
-		$begin->invoke($this->db, 'u1');
-		$p = $this->getProperty('\fijma\fijdb\Fijdb', 'inTransaction');
-		$inTransaction = $p->getValue($this->db);
-		$this->assertEquals($inTransaction, true);
-		$stmt = new \fijma\fijdb\MockMysqliStatement();
-		$stmt->setReturn(false);
-		$stmt->error = 'argh!';
-		$ref = &$stmt;
-		$exec = $this->getMethod('\fijma\fijdb\Fijdb', 'executeStatement');
-		$exec->invoke($this->db, $ref, 'u1');
-		$inTransaction = $p->getValue($this->db);
-		$this->assertEquals($inTransaction, false);
-	}
-
-	/**
-	 * @expectedException \Exception
-	 * @expectedExceptionMessage Fijdb could not get insert id: argh!
-	 */
-	public function test_fijdb_getInsertId_error()
-	{
-		$db = new \fijma\fijdb\MockFijdb('host', 'db', $this->users);
-		$m = $this->getMethod('\fijma\fijdb\MockFijdb', 'connect');
-		$conn = $m->invoke($db, 'u1');
-		$getInsertId = $this->getMethod('\fijma\fijdb\MockFijdb', 'getInsertId');
-		$getInsertId->invoke($db, 'u1');
-	}
 }
 
 ?>
