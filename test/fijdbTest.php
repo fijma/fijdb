@@ -422,6 +422,70 @@ class FijdbTest extends FijmaPHPUnitExtensions
 		$getInsertId = $this->getMethod('\fijma\fijdb\MockFijdb', 'getInsertId');
 		$getInsertId->invoke($db, 'u1');
 	}
+
+	/**
+	 * @expectedException \Exception
+	 * @expectedExceptionMessage Fijdb could not access result metadata: argh!
+	 */
+	public function test_fijdb_get_metadata_error()
+	{
+		$db = new \fijma\fijdb\MockFijdb('host', 'db', $this->users);
+		$stmt = new \fijma\fijdb\MockMysqliStatement();
+		$stmt->setReturn(false);
+		$stmt->error = 'argh!';
+		$ref = &$stmt;
+		$getResults = $this->getMethod('\fijma\fijdb\MockFijdb', 'getResult');
+		$getResults->invoke($db, $ref, 'u1');
+	}
+
+	public function test_fijdb_results_returns_array_if_no_metadata()
+	{
+		$db = new \fijma\fijdb\MockFijdb('host', 'db', $this->users);
+		$stmt = new \fijma\fijdb\MockMysqliStatement();
+		$stmt->setReturn(true);
+		$ref = &$stmt;
+		$GLOBALS['ff'] = [];
+		$getResults = $this->getMethod('\fijma\fijdb\MockFijdb', 'getResult');
+		$result = $getResults->invoke($db, $ref, 'u1');
+		$this->assertEquals([], $result);
+	}
+
+	/**
+	 * @expectedException \Exception
+	 * @expectedExceptionMessage Fijdb could not bind results: argh!
+	 */
+	public function test_fijdb_bind_results_error()
+	{
+		$db = new \fijma\fijdb\MockFijdb('host', 'db', $this->users);
+		$stmt = new \fijma\fijdb\MockMysqliStatement();
+		$stmt->setReturn(true);
+		$stmt->error = 'argh!';
+		$ref = &$stmt;
+		$GLOBALS['ff'] = new \fijma\fijdb\MockMysqliField();
+		$GLOBALS['br'] = false;
+		$getResults = $this->getMethod('\fijma\fijdb\MockFijdb', 'getResult');
+		$result = $getResults->invoke($db, $ref, 'u1');
+	}
+
+	/**
+	 * @expectedException \Exception
+	 * @expectedExceptionMessage Fijdb failed to fetch data: argh!
+	 */
+	public function test_fijdb_fetch_error()
+	{
+		$db = new \fijma\fijdb\MockFijdb('host', 'db', $this->users);
+		$stmt = new \fijma\fijdb\MockMysqliStatement();
+		$stmt->setReturn(true);
+		$stmt->error = 'argh!';
+		$ref = &$stmt;
+		$GLOBALS['ff'] = new \fijma\fijdb\MockMysqliField();
+		$GLOBALS['br'] = true;
+		$getResults = $this->getMethod('\fijma\fijdb\MockFijdb', 'getResult');
+		$result = $getResults->invoke($db, $ref, 'u1');
+	}
+
+
+
 }
 
 ?>

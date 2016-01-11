@@ -31,5 +31,23 @@ class MockMysqliStatement
 	{
 	}
 
+	public function result_metadata()
+	{
+		if($this->r) {
+			return new \fijma\fijdb\MockMysqliResult();
+		} else {
+			$this->r;
+		}
+	}
+
+	public function bind_result()
+	{
+		return $GLOBALS['br'];
+	}
+
+	public function fetch()
+	{
+		return false;
+	}
 }
 ?>

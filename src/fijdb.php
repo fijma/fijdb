@@ -282,7 +282,7 @@ class Fijdb
 			$err = $stmt->error;
 			$stmt->close();
 			$this->close($user);
-			throw new \Exception('Failed to fetch data: ' . $err);
+			throw new \Exception('Fijdb failed to fetch data: ' . $err);
 		}
 		
 		// Finish up
