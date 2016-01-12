@@ -484,7 +484,21 @@ class FijdbTest extends FijmaPHPUnitExtensions
 		$result = $getResults->invoke($db, $ref, 'u1');
 	}
 
+	public function test_fijdb_begins_a_transaction()
+	{
+		$beginTransaction = $this->getMethod('\fijma\fijdb\Fijdb', 'beginTransaction');
+		$beginTransaction->invoke($this->db, 'u2');
+		$inTransaction = $this->getProperty('\fijma\fijdb\Fijdb', 'inTransaction');
+		$this->assertTrue($inTransaction->getValue($this->db));
+		$select = $this->getMethod('\fijma\fijdb\Fijdb', 'select');
+		$result = $select->invoke($this->db, 'u2', 'SELECT @@autocommit');
+		$this->assertEquals($result, [['@@autocommit' => 1]]);
+	}
 
+	public function test_fijdb_rolls_back_a_transaction()
+	{
+	
+	}
 
 }
 
