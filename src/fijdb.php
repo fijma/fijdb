@@ -15,7 +15,7 @@ class Fijdb
 	protected $dbname;
 	protected $users;
 	protected $conn = array();
-	protected $inTransaction = false;
+	protected $inTransaction = array();
 
 	public function __construct($host, $dbname, array $users)
 	{
@@ -27,6 +27,10 @@ class Fijdb
 		$this->dbname = $dbname;
 		if(!$this->validateUsers($users)) throw new \Exception('Fijdb received invalid users array.');
 		$this->users = $users;
+		// Set user-specific transaction flag to false.
+		foreach($users as $id => $data) {
+			$this->inTransaction[$id] = false;
+		}
 	}
 
 	public function __destruct()
@@ -102,21 +106,31 @@ class Fijdb
 	{
 		$conn = $this->connect($user);
 		$conn->begin_transaction();
-		$this->inTransaction = true;
+		$this->inTransaction[$user] = true;
 	}
 
 	protected function rollbackTransaction($user)
 	{
 		$conn = $this->connect($user);
 		$conn->rollback();
-		$this->inTransaction = false;
 	}
 
 	protected function commitTransaction($user)
 	{
 		$conn = $this->connect($user);
-		$conn->commit();
-		$this->inTransaction = false;
+		$con->autocommit(true);
+		$this->inTransaction[$user] = false;
+	}
+
+	/**
+	 * Note that this function will rollback prior to setting autocommit.
+	 */
+	protected function cancelTransaction($user)
+	{
+		$conn = $this->connect($user);
+		$conn->rollback();
+		$conn->autocommit(true);
+		$this->inTransaction[$user] = false;
 	}
 
 	/**
@@ -179,7 +193,7 @@ class Fijdb
 		$stmt = $conn->stmt_init();
 		if(!$stmt->prepare($sql)) {
 			$stmt->close();
-			if($this->inTransaction) $this->rollbackTransaction($user);
+			if($this->inTransaction[$user]) $this->rollbackTransaction($user);
 			$this->close($user);
 			throw new \Exception('Fijdb could not prepare the statement: ' . $sql);
 		}
@@ -197,7 +211,7 @@ class Fijdb
 			if(!call_user_func_array(array($stmt, 'bind_param'), $refArgs)) {
 				$err = $stmt->error;
 				$stmt->close();
-				if($this->inTransaction) $this->rollbackTransaction($user);
+				if($this->inTransaction[$user]) $this->rollbackTransaction($user);
 				$this->close($user);
 				throw new \Exception('Fijdb could not bind parameters: ' . $err);
 			}
@@ -230,7 +244,7 @@ class Fijdb
 				throw new \Exception('Fijdb could not get insert id: ' . $err);
 			}
 		} // @codeCoverageIgnore
-		if(!$this->inTransaction) $this->close($user);
+		if(!$this->inTransaction[$user]) $this->close($user);
 		return $id;
 	}
 
@@ -287,7 +301,7 @@ class Fijdb
 		
 		// Finish up
 		$stmt->close();
-		if(!$this->inTransaction) $this->close($user);
+		if(!$this->inTransaction[$user]) $this->close($user);
 		return $res;
 	}
 

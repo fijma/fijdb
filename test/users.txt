@@ -1,4 +1,5 @@
-Username	Host		Password	SELECT	INSERT	UPDATE	DELETE
-------------------------------------------------------------------------------
-u1		localhost	u1pw		Y	N	N	N
-u2		localhost	u2pw		Y	Y	Y	Y
+Username	Host		Password	SELECT	INSERT	UPDATE	DELETE	DROP
+------------------------------------------------------------------------------------
+u1		localhost	u1pw		Y	N	N	N	N
+u2		localhost	u2pw		Y	Y	Y	Y	N
+phpunit		localhost	pupw		Y	Y	Y	Y	Y

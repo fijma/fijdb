@@ -21,7 +21,7 @@ class FijdbTest extends FijmaPHPUnitExtensions
 
 	public function getConnection()
 	{
-		$pdo = new PDO('mysql:host=localhost;dbname=fijdb', 'u2', 'u2pw');
+		$pdo = new PDO('mysql:host=localhost;dbname=fijdb', 'phpunit', 'pupw');
 		return $this->createDefaultDBConnection($pdo, 'fijdb');
 	}
 
@@ -310,12 +310,12 @@ class FijdbTest extends FijmaPHPUnitExtensions
 		$begin->invoke($this->db, 'u1');
 		$p = $this->getProperty('\fijma\fijdb\Fijdb', 'inTransaction');
 		$inTransaction = $p->getValue($this->db);
-		$this->assertEquals($inTransaction, true);
+		$this->assertEquals($inTransaction['u1'], true);
 		$select = $this->getMethod('\fijma\fijdb\Fijdb', 'select');
 		$select->invoke($this->db, 'u1', 'SELECT * FROM notatable;');
 		restore_error_handler();
 		$inTransaction = $p->getValue($this->db);
-		$this->assertEquals($inTransaction, false);
+		$this->assertEquals($inTransaction['u1'], false);
 	}
 
 	/**
@@ -341,14 +341,14 @@ class FijdbTest extends FijmaPHPUnitExtensions
 		$begin->invoke($this->db, 'u1');
 		$p = $this->getProperty('\fijma\fijdb\Fijdb', 'inTransaction');
 		$inTransaction = $p->getValue($this->db);
-		$this->assertEquals($inTransaction, true);
+		$this->assertEquals($inTransaction['u1'], true);
 		$stmt = new \fijma\fijdb\MockMysqliStatement();
 		$stmt->setReturn(false);
 		$bind = $this->getMethod('\fijma\fijdb\Fijdb', 'bindParameters');
 		$ref = &$stmt;
 		$bind->invoke($this->db, 'u1', $ref, 'i', [0]);
 		$inTransaction = $p->getValue($this->db);
-		$this->assertEquals($inTransaction, false);
+		$this->assertEquals($inTransaction['u1'], false);
 	}
 
 	/**
@@ -399,7 +399,7 @@ class FijdbTest extends FijmaPHPUnitExtensions
 		$begin->invoke($this->db, 'u1');
 		$p = $this->getProperty('\fijma\fijdb\Fijdb', 'inTransaction');
 		$inTransaction = $p->getValue($this->db);
-		$this->assertEquals($inTransaction, true);
+		$this->assertEquals($inTransaction['u1'], true);
 		$stmt = new \fijma\fijdb\MockMysqliStatement();
 		$stmt->setReturn(false);
 		$stmt->error = 'argh!';
@@ -407,7 +407,7 @@ class FijdbTest extends FijmaPHPUnitExtensions
 		$exec = $this->getMethod('\fijma\fijdb\Fijdb', 'executeStatement');
 		$exec->invoke($this->db, $ref, 'u1');
 		$inTransaction = $p->getValue($this->db);
-		$this->assertEquals($inTransaction, false);
+		$this->assertEquals($inTransaction['u1'], false);
 	}
 
 	/**
@@ -489,7 +489,7 @@ class FijdbTest extends FijmaPHPUnitExtensions
 		$beginTransaction = $this->getMethod('\fijma\fijdb\Fijdb', 'beginTransaction');
 		$beginTransaction->invoke($this->db, 'u2');
 		$inTransaction = $this->getProperty('\fijma\fijdb\Fijdb', 'inTransaction');
-		$this->assertTrue($inTransaction->getValue($this->db));
+		$this->assertTrue($inTransaction->getValue($this->db)['u2']);
 		$select = $this->getMethod('\fijma\fijdb\Fijdb', 'select');
 		$result = $select->invoke($this->db, 'u2', 'SELECT @@autocommit');
 		$this->assertEquals($result, [['@@autocommit' => 1]]);
@@ -497,7 +497,27 @@ class FijdbTest extends FijmaPHPUnitExtensions
 
 	public function test_fijdb_rolls_back_a_transaction()
 	{
-	
+		$beginTransaction = $this->getMethod('\fijma\fijdb\Fijdb', 'beginTransaction');
+		$beginTransaction->invoke($this->db, 'u2');
+		$inTransaction = $this->getProperty('\fijma\fijdb\Fijdb', 'inTransaction');
+		$this->assertTrue($inTransaction->getValue($this->db)['u2']);
+		$insert = $this->getMethod('\fijma\fijdb\Fijdb', 'insert');
+		$insert->invoke($this->db, 'u2', 'INSERT INTO testtable(value) VALUES(?);', 's', array('Hello, world!'));
+		$queryTable = $this->getConnection()->createQueryTable(
+			'testtable', 'SELECT * FROM testtable;'
+		);
+		$expectedTable = $this->createFlatXMLDataSet('test/test_fijdb_insert.xml')
+				      ->getTable('testtable');
+		$this->assertTablesEqual($expectedTable, $queryTable);
+		$rollbackTransaction = $this->getMethod('\fijma\fijdb\Fijdb', 'rollbackTransaction');
+		$rollbackTransaction->invoke($this->db, 'u2');
+		$queryTable = $this->getConnection()->createQueryTable(
+			'testtable', 'SELECT * FROM testtable;'
+		);
+		$expectedTable = $this->createFlatXMLDataSet('test/setup.xml')
+				      ->getTable('testtable');
+		$this->assertTablesEqual($expectedTable, $queryTable);
+
 	}
 
 }
