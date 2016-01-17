@@ -26,8 +26,18 @@ CREATE TABLE `testtable` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `value` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `testtable`
+--
+
+LOCK TABLES `testtable` WRITE;
+/*!40000 ALTER TABLE `testtable` DISABLE KEYS */;
+INSERT INTO `testtable` VALUES (1,'Because I have to have something.'),(2,'Hello, world!');
+/*!40000 ALTER TABLE `testtable` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -38,4 +48,4 @@ CREATE TABLE `testtable` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-01-03 12:58:53
+-- Dump completed on 2016-01-17 16:27:53

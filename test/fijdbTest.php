@@ -492,24 +492,24 @@ class FijdbTest extends FijmaPHPUnitExtensions
 		$this->assertTrue($inTransaction->getValue($this->db)['u2']);
 		$select = $this->getMethod('\fijma\fijdb\Fijdb', 'select');
 		$result = $select->invoke($this->db, 'u2', 'SELECT @@autocommit');
-		$this->assertEquals($result, [['@@autocommit' => 1]]);
+		$this->assertEquals($result, [['@@autocommit' => 0]]);
 	}
 
 	public function test_fijdb_rolls_back_a_transaction()
 	{
 		$beginTransaction = $this->getMethod('\fijma\fijdb\Fijdb', 'beginTransaction');
-		$beginTransaction->invoke($this->db, 'u2');
-		$inTransaction = $this->getProperty('\fijma\fijdb\Fijdb', 'inTransaction');
-		$this->assertTrue($inTransaction->getValue($this->db)['u2']);
-		$insert = $this->getMethod('\fijma\fijdb\Fijdb', 'insert');
-		$insert->invoke($this->db, 'u2', 'INSERT INTO testtable(value) VALUES(?);', 's', array('Hello, world!'));
-		$queryTable = $this->getConnection()->createQueryTable(
-			'testtable', 'SELECT * FROM testtable;'
-		);
-		$expectedTable = $this->createFlatXMLDataSet('test/test_fijdb_insert.xml')
-				      ->getTable('testtable');
-		$this->assertTablesEqual($expectedTable, $queryTable);
 		$rollbackTransaction = $this->getMethod('\fijma\fijdb\Fijdb', 'rollbackTransaction');
+		$inTransaction = $this->getProperty('\fijma\fijdb\Fijdb', 'inTransaction');
+		$insert = $this->getMethod('\fijma\fijdb\Fijdb', 'insert');
+		$select = $this->getMethod('\fijma\fijdb\Fijdb', 'select');
+		$beginTransaction->invoke($this->db, 'u2');
+		$this->assertTrue($inTransaction->getValue($this->db)['u2']);
+		$insert->invoke($this->db, 'u2', 'INSERT INTO testtable(value) VALUES(?);', 's', array('Hello, world!'));
+		// PHPUnit is not privy to the transaction results, so we can't use a query table.
+		// Instead, we're just going to check for the id (we know this works from a
+		// previous test anyway.
+		$insertId = $this->getMethod('\fijma\fijdb\Fijdb', 'getInsertId');
+		$this->assertEquals(2, $insertId->invoke($this->db, 'u2'));
 		$rollbackTransaction->invoke($this->db, 'u2');
 		$queryTable = $this->getConnection()->createQueryTable(
 			'testtable', 'SELECT * FROM testtable;'
@@ -517,7 +517,7 @@ class FijdbTest extends FijmaPHPUnitExtensions
 		$expectedTable = $this->createFlatXMLDataSet('test/setup.xml')
 				      ->getTable('testtable');
 		$this->assertTablesEqual($expectedTable, $queryTable);
-
+		$this->assertTrue($inTransaction->getValue($this->db)['u2']);
 	}
 
 }

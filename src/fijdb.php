@@ -105,14 +105,14 @@ class Fijdb
 	protected function beginTransaction($user)
 	{
 		$conn = $this->connect($user);
-		$conn->begin_transaction();
+		$conn->autocommit(false);
 		$this->inTransaction[$user] = true;
 	}
 
 	protected function rollbackTransaction($user)
 	{
 		$conn = $this->connect($user);
-		$conn->rollback();
+		return $conn->rollback();
 	}
 
 	protected function commitTransaction($user)
@@ -123,7 +123,7 @@ class Fijdb
 	}
 
 	/**
-	 * Note that this function will rollback prior to setting autocommit.
+	 * Notice that this function will rollback prior to setting autocommit.
 	 */
 	protected function cancelTransaction($user)
 	{
