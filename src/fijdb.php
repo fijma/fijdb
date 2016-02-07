@@ -118,7 +118,7 @@ class Fijdb
 	protected function commitTransaction($user)
 	{
 		$conn = $this->connect($user);
-		$con->autocommit(true);
+		$conn->autocommit(true);
 		$this->inTransaction[$user] = false;
 	}
 

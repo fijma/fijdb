@@ -520,6 +520,52 @@ class FijdbTest extends FijmaPHPUnitExtensions
 		$this->assertTrue($inTransaction->getValue($this->db)['u2']);
 	}
 
+	public function test_fijdb_cancels_a_transaction()
+	{
+		$beginTransaction = $this->getMethod('\fijma\fijdb\Fijdb', 'beginTransaction');
+		$cancelTransaction = $this->getMethod('\fijma\fijdb\Fijdb', 'cancelTransaction');
+		$inTransaction = $this->getProperty('\fijma\fijdb\Fijdb', 'inTransaction');
+		$insert = $this->getMethod('\fijma\fijdb\Fijdb', 'insert');
+		$select = $this->getMethod('\fijma\fijdb\Fijdb', 'select');
+		$beginTransaction->invoke($this->db, 'u2');
+		$this->assertTrue($inTransaction->getValue($this->db)['u2']);
+		$insert->invoke($this->db, 'u2', 'INSERT INTO testtable(value) VALUES(?);', 's', array('Hello, world!'));
+		// PHPUnit is not privy to the transaction results, so we can't use a query table.
+		// Instead, we're just going to check for the id (we know this works from a
+		// previous test anyway.
+		$insertId = $this->getMethod('\fijma\fijdb\Fijdb', 'getInsertId');
+		$this->assertEquals(2, $insertId->invoke($this->db, 'u2'));
+		$cancelTransaction->invoke($this->db, 'u2');
+		$queryTable = $this->getConnection()->createQueryTable(
+			'testtable', 'SELECT * FROM testtable;'
+		);
+		$expectedTable = $this->createFlatXMLDataSet('test/setup.xml')
+				      ->getTable('testtable');
+		$this->assertTablesEqual($expectedTable, $queryTable);
+		$this->assertFalse($inTransaction->getValue($this->db)['u2']);
+
+	}
+
+	public function test_fijdb_commits_a_transaction()
+	{
+		$beginTransaction = $this->getMethod('\fijma\fijdb\Fijdb', 'beginTransaction');
+		$commitTransaction = $this->getMethod('\fijma\fijdb\Fijdb', 'commitTransaction');
+		$inTransaction = $this->getProperty('\fijma\fijdb\Fijdb', 'inTransaction');
+		$insert = $this->getMethod('\fijma\fijdb\Fijdb', 'insert');
+		$select = $this->getMethod('\fijma\fijdb\Fijdb', 'select');
+		$beginTransaction->invoke($this->db, 'u2');
+		$this->assertTrue($inTransaction->getValue($this->db)['u2']);
+		$insert->invoke($this->db, 'u2', 'INSERT INTO testtable(value) VALUES(?);', 's', array('Hello, world!'));
+		$queryTable = $this->getConnection()->createQueryTable('testtable', 'SELECT * FROM testtable;');
+		$expectedTable = $this->createFlatXMLDataSet('test/setup.xml')->getTable('testtable');
+		$this->assertTablesEqual($expectedTable, $queryTable);
+		$commitTransaction->invoke($this->db, 'u2');
+		$queryTable = $this->getConnection()->createQueryTable('testtable', 'SELECT * FROM testtable;');
+		$expectedTable = $this->createFlatXMLDataSet('test/test_fijdb_insert.xml')->getTable('testtable');
+		$this->assertTablesEqual($expectedTable, $queryTable);
+		$this->assertFalse($inTransaction->getValue($this->db)['u2']);
+	}
+
 }
 
 ?>
