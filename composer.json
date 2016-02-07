@@ -1,6 +1,6 @@
 {
     "name": "fijma/fijdb",
-    "description": "project-description",
+    "description": "Yet another PHP wrapper for MySQL.",
     "type": "library",
     "license": "MIT",
     "authors": [
